@@ -78,9 +78,9 @@ DOSAGE_FACTORS = {
 # Medications that use loading doses for first administration
 # BUG: Missing commas between list items
 LOADING_DOSE_MEDICATIONS = [
-    "amiodarone"
-    "lorazepam"
-    "fentynal"
+    "amiodarone",
+    "lorazepam",
+    "fentynal",
 ]
 
 def load_patient_data(filepath):
@@ -94,8 +94,12 @@ def load_patient_data(filepath):
         list: List of patient dictionaries
     """
     # BUG: No error handling for file not found
-    with open(filepath, 'r') as file:
-        return json.load(file)
+    try:
+        with open(filepath, 'r') as file:
+            return json.load(file)
+    except Exception as e:
+        print(f"Failed to load patient data: {e}")
+        return []
 
 def calculate_dosage(patient):
     """
@@ -112,20 +116,25 @@ def calculate_dosage(patient):
     
     # Extract patient information
     # BUG: No check if 'weight' key exists
-    weight = patient['weight']
+    if patient['weight']:
+        weight = patient['weight']
+
     # BUG: No check if 'medication' key exists
-    medication = patient['medication'] # This bug is diabolical
+    if patient['medication']:
+        medication = patient['medication'] # This bug is diabolical
     
     # Get the medication factor
     # BUG: Adding 's' to medication name, which doesn't match DOSAGE_FACTORS keys
-    factor = DOSAGE_FACTORS.get(medication + 's', 0)
+    factor = DOSAGE_FACTORS.get(medication, 0)
     
     # Calculate base dosage
     # BUG: Using addition instead of multiplication
-    base_dosage = weight + factor
+    base_dosage = weight * factor
     
     # Determine if loading dose should be applied
     # BUG: No check if 'is_first_dose' key exists
+    if patient['is_first_dose'] == True:
+        loading_dose_applied = True
     is_first_dose = patient.get('is_first_dose', False)
     loading_dose_applied = False
     final_dosage = base_dosage
